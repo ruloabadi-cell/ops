@@ -39,6 +39,162 @@ input{width:100%;padding:11px;border:1px solid #ddd;border-radius:12px;font-size
 </style>
 </head>
 <body>
-<!-- Si querés, te paso el archivo completo en ZIP para evitar errores de copiado -->
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('cargar', this)">Cargar</button>
+    <button class="tab" onclick="showTab('historial', this)">Historial</button>
+    <button class="tab" onclick="showTab('resumen', this)">Resumen</button>
+  </div>
+
+  <section id="cargar">
+    <div class="card">
+      <div class="row">
+        <h1>Nueva operación</h1>
+        <div class="today" id="todayLabel">📅 Hoy</div>
+      </div>
+
+      <div class="seg">
+        <button id="btnCompra" class="sbtn compra" onclick="setTipo('Compra')">Compra</button>
+        <button id="btnVenta" class="sbtn venta active" onclick="setTipo('Venta')">Venta</button>
+      </div>
+
+      <div class="grid" style="margin-top:8px">
+        <input id="usd" placeholder="USD" inputmode="decimal" oninput="autoTotal()">
+        <input id="cot" placeholder="Cotización" inputmode="decimal" oninput="autoTotal()">
+      </div>
+
+      <div style="margin-top:8px">
+        <input id="nombre" placeholder="Nombre">
+      </div>
+
+      <div class="state">
+        <button id="stLiquidada" class="sbtn active" onclick="setEstado('Liquidada')">Liquidada</button>
+        <button id="stPendiente" class="sbtn" onclick="setEstado('Pendiente')">Pendiente</button>
+        <button id="stMeDeben" class="sbtn" onclick="setEstado('Me deben USD')">Me deben USD</button>
+        <button id="stDebo" class="sbtn" onclick="setEstado('Debo USD')">Debo USD</button>
+      </div>
+
+      <div class="box">
+        <div class="small">Total automático</div>
+        <div class="big" id="totalAuto">$0</div>
+      </div>
+
+      <button class="btn" onclick="guardar()">Guardar operación</button>
+      <button class="btn" style="background:#25D366;color:#063b19" onclick="enviarUltima()">Enviar última por WhatsApp</button>
+    </div>
+
+    <div class="card">
+      <div class="box" style="background:#111827;color:white;margin-top:0">
+        <div class="small" style="color:#cbd5e1">Posición vendida</div>
+        <div class="big" id="posicion">USD 0</div>
+      </div>
+      <div class="grid">
+        <div class="box"><div class="small">Ganancia</div><div class="big" id="ganancia">$0</div></div>
+        <div class="box"><div class="small">Cierre</div><input id="cierre" value="1425" inputmode="decimal" oninput="render()"></div>
+      </div>
+      <div class="grid">
+        <div class="box"><div class="small">Vendido</div><div class="big" id="vendido">USD 0</div></div>
+        <div class="box"><div class="small">Comprado</div><div class="big" id="comprado">USD 0</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="historial" class="hidden">
+    <div class="card">
+      <h1>Historial</h1>
+      <div id="lista" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <section id="resumen" class="hidden">
+    <div class="card">
+      <h1>Resumen</h1>
+      <div class="grid">
+        <div class="box"><div class="small">Ventas $</div><div class="big" id="ventasPesos">$0</div></div>
+        <div class="box"><div class="small">Compras $</div><div class="big" id="comprasPesos">$0</div></div>
+      </div>
+      <div class="box"><div class="small">Pesos netos</div><div class="big" id="pesosNetos">$0</div></div>
+      <button class="btn danger" onclick="borrarTodo()">Borrar todo</button>
+    </div>
+  </section>
+</div>
+
+<script>
+let tipo='Venta', estado='Liquidada';
+let ops=JSON.parse(localStorage.getItem('opsDolarAle')||'[]');
+let ultima=null;
+
+function n(v){return Number(String(v||0).replace(',','.'))}
+function ars(v){return '$'+Math.round(v||0).toLocaleString('es-AR')}
+function usdf(v){return 'USD '+Math.round(v||0).toLocaleString('es-AR')}
+function fechaHoy(){
+  const d=new Date();
+  return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+}
+document.getElementById('todayLabel').textContent='📅 Hoy '+fechaHoy();
+
+function setTipo(t){
+  tipo=t;
+  document.getElementById('btnCompra').classList.toggle('active',t==='Compra');
+  document.getElementById('btnVenta').classList.toggle('active',t==='Venta');
+}
+function setEstado(e){
+  estado=e;
+  ['stLiquidada','stPendiente','stMeDeben','stDebo'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  if(e==='Liquidada')document.getElementById('stLiquidada').classList.add('active');
+  if(e==='Pendiente')document.getElementById('stPendiente').classList.add('active');
+  if(e==='Me deben USD')document.getElementById('stMeDeben').classList.add('active');
+  if(e==='Debo USD')document.getElementById('stDebo').classList.add('active');
+}
+function autoTotal(){
+  document.getElementById('totalAuto').textContent=ars(n(document.getElementById('usd').value)*n(document.getElementById('cot').value));
+}
+function guardar(){
+  const usd=n(document.getElementById('usd').value), cot=n(document.getElementById('cot').value), nombre=document.getElementById('nombre').value.trim();
+  if(!usd||!cot||!nombre){alert('Falta USD, cotización o nombre');return}
+  const op={id:Date.now(),fecha:new Date().toISOString().slice(0,10),tipo,usd,cot,nombre,estado,total:usd*cot};
+  ops.unshift(op); ultima=op;
+  localStorage.setItem('opsDolarAle',JSON.stringify(ops));
+  document.getElementById('usd').value='';document.getElementById('cot').value='';document.getElementById('nombre').value='';autoTotal();render();
+}
+function mensaje(op){return (op.tipo==='Venta'?'V. ':'C. ')+op.usd+' x '+op.cot+' '+op.nombre}
+function enviarUltima(){ if(!ultima&&ops[0])ultima=ops[0]; if(!ultima){alert('No hay última operación');return} window.location.href='https://wa.me/?text='+encodeURIComponent(mensaje(ultima)); }
+function borrar(id){ops=ops.filter(o=>o.id!==id);localStorage.setItem('opsDolarAle',JSON.stringify(ops));render()}
+function borrarTodo(){if(confirm('¿Borrar todo?')){ops=[];localStorage.setItem('opsDolarAle',JSON.stringify(ops));render()}}
+function calc(){
+  const v=ops.filter(o=>o.tipo==='Venta'), c=ops.filter(o=>o.tipo==='Compra');
+  const usdV=v.reduce((s,o)=>s+o.usd,0), usdC=c.reduce((s,o)=>s+o.usd,0);
+  const arsV=v.reduce((s,o)=>s+o.total,0), arsC=c.reduce((s,o)=>s+o.total,0);
+  const pos=usdV-usdC, net=arsV-arsC, cierre=n(document.getElementById('cierre').value), gan=net-(pos*cierre);
+  return{usdV,usdC,arsV,arsC,pos,net,gan}
+}
+function render(){
+  const c=calc();
+  document.getElementById('vendido').textContent=usdf(c.usdV);
+  document.getElementById('comprado').textContent=usdf(c.usdC);
+  document.getElementById('posicion').textContent=usdf(c.pos);
+  document.getElementById('ganancia').textContent=ars(c.gan);
+  document.getElementById('ventasPesos').textContent=ars(c.arsV);
+  document.getElementById('comprasPesos').textContent=ars(c.arsC);
+  document.getElementById('pesosNetos').textContent=ars(c.net);
+  document.getElementById('lista').innerHTML=ops.length?ops.map(o=>`
+    <div class="op">
+      <strong>${o.tipo==='Venta'?'🔴 V.':'🟢 C.'} ${o.usd} x ${o.cot} ${o.nombre}</strong>
+      <div class="meta">${o.fecha} · ${o.estado}</div>
+      <div class="total">${ars(o.total)}</div>
+      <div class="actions">
+        <button onclick="window.location.href='https://wa.me/?text=${encodeURIComponent(mensaje(o))}'">WhatsApp</button>
+        <button class="danger" onclick="borrar(${o.id})">Borrar</button>
+      </div>
+    </div>`).join(''):'<div class="meta">Sin operaciones.</div>';
+}
+function showTab(id,btn){
+  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+render();
+</script>
 </body>
 </html>
