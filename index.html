@@ -144,41 +144,139 @@ button{font-family:inherit;border:0;border-radius:10px;padding:9px;font-size:14p
 <script>
 
 let tipo='V';
+let ops=JSON.parse(localStorage.getItem('ops')||'[]');
 let editando=null;
 
-let ops=JSON.parse(localStorage.getItem('ops')||'[]');
-let historial=JSON.parse(localStorage.getItem('historialOps')||'[]');
-
-function g(id){
-  return document.getElementById(id);
-}
-
-function ars(x){
-  return '$'+Math.round(x||0).toLocaleString('es-AR');
-}
-
-function usd(x){
-  return 'USD '+Math.round(x||0).toLocaleString('es-AR');
-}
-function fechaHoy(){
-  return new Date().toISOString().slice(0,10);
-}
-
-function totalAuto(){
-  g('total').innerText=ars(
-    Number(g('usd').value||0)*
-    Number(g('cot').value||0)
-  );
-}
+function g(id){return document.getElementById(id)}
+function n(x){return Number(String(x||0).replace(',','.'))}
+function ars(x){return '$'+Math.round(x||0).toLocaleString('es-AR')}
+function usd(x){return 'USD '+Math.round(x||0).toLocaleString('es-AR')}
+function hoy(){return new Date().toISOString().slice(0,10)}
 
 function pintarTipo(){
   g('btnC').className=tipo==='C'?'on':'';
   g('btnV').className=tipo==='V'?'on':'';
 }
 
-renderHoy();
-renderDetalle();
-renderHistorial();
+function totalAuto(){
+  g('total').innerText=ars(n(g('usd').value)*n(g('cot').value));
+}
+
+function guardar(){
+  let nombre=g('nom').value.trim();
+  let u=n(g('usd').value);
+  let c=n(g('cot').value);
+  if(!nombre||!u||!c){alert('Falta nombre, USD o cotización');return}
+
+  if(editando){
+    let op=ops.find(o=>o.id===editando);
+    if(op){op.tipo=tipo;op.nombre=nombre;op.usd=u;op.cot=c;op.fecha=hoy()}
+    editando=null;
+    g('saveBtn').innerText='Guardar op.';
+  }else{
+    ops.unshift({id:Date.now(),fecha:hoy(),tipo,nombre,usd:u,cot:c});
+  }
+
+  localStorage.setItem('ops',JSON.stringify(ops));
+  g('nom').value='';
+  g('usd').value='';
+  g('cot').value='';
+  totalAuto();
+  render();
+}
+
+function calc(arr){
+  arr=arr||ops;
+  let ventas=arr.filter(o=>o.tipo==='V');
+  let compras=arr.filter(o=>o.tipo==='C');
+  let v=ventas.reduce((s,o)=>s+o.usd,0);
+  let c=compras.reduce((s,o)=>s+o.usd,0);
+  let vp=ventas.reduce((s,o)=>s+o.usd*o.cot,0);
+  let cp=compras.reduce((s,o)=>s+o.usd*o.cot,0);
+  let pos=v-c;
+  let cierre=n(g('cierre').value);
+  let posp=pos*cierre;
+  let gan=vp-cp-posp;
+  return{v,c,pos,posp,gan};
+}
+
+function renderHoy(){
+  let x=calc(ops);
+  g('compras').innerText=usd(x.c);
+  g('ventas').innerText=usd(x.v);
+  g('posicion').innerText=usd(x.pos);
+  g('posPesos').innerText=ars(x.posp);
+  g('ganancia').innerText=ars(x.gan);
+}
+
+function opLinea(o){
+  return '<div class="op">'+
+  (o.tipo==='V'?'🔴 V. ':'🟢 C. ')+o.usd+' x '+o.cot+' '+(o.nombre||o.nom||'')+
+  '<div class="actions"><button onclick="editar('+o.id+')">Editar</button><button onclick="wsp('+o.id+')">Wsp</button><button onclick="borrar('+o.id+')">Borrar</button></div></div>';
+}
+
+function renderDetalle(){
+  let arr=ops.filter(o=>o.fecha===hoy());
+  g('detalleLista').innerHTML=arr.length?arr.map(opLinea).join(''):'Sin operaciones hoy';
+}
+
+function renderHistorial(){
+  let q=(g('buscar')?g('buscar').value.toLowerCase():'');
+  let arr=ops.filter(o=>(o.fecha+' '+(o.nombre||o.nom||'')).toLowerCase().includes(q));
+  g('historialLista').innerHTML=arr.length?arr.map(opLinea).join(''):'Sin resultados';
+}
+
+function render(){
+  renderHoy();
+  renderDetalle();
+  renderHistorial();
+}
+
+function tab(t){
+  g('hoy').className=t==='hoy'?'':'hide';
+  g('detalle').className=t==='detalle'?'':'hide';
+  g('historial').className=t==='historial'?'':'hide';
+  g('tabHoy').className='tab '+(t==='hoy'?'on':'');
+  g('tabDetalle').className='tab '+(t==='detalle'?'on':'');
+  g('tabHistorial').className='tab '+(t==='historial'?'on':'');
+}
+
+function editar(id){
+  let o=ops.find(x=>x.id===id);if(!o)return;
+  editando=id;
+  tipo=o.tipo;
+  pintarTipo();
+  g('nom').value=o.nombre||o.nom||'';
+  g('usd').value=o.usd;
+  g('cot').value=o.cot;
+  g('saveBtn').innerText='Guardar corrección';
+  tab('hoy');
+  totalAuto();
+}
+
+function borrar(id){
+  if(!confirm('¿Borrar operación?'))return;
+  ops=ops.filter(o=>o.id!==id);
+  localStorage.setItem('ops',JSON.stringify(ops));
+  render();
+}
+
+function wsp(id){
+  let o=ops.find(x=>x.id===id);if(!o)return;
+  let msg=(o.tipo==='V'?'V. ':'C. ')+o.usd+' x '+o.cot+' '+(o.nombre||o.nom||'');
+  location.href='https://wa.me/?text='+encodeURIComponent(msg);
+}
+
+function wspUltima(){
+  if(ops[0])wsp(ops[0]);
+  else alert('No hay operación');
+}
+
+function archivarDia(){
+  alert('Día archivado');
+}
+
+render();
 
 </script>
 </body>
