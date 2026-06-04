@@ -16,21 +16,105 @@ body{font-family:-apple-system;margin:0;background:#f4f5f7;padding:7px;color:#11
 <button class="btn" style="margin-top:6px" onclick="archivarDia()">Archivar día</button></div></section>
 <section id="h" class="hide"><div class="card"><h2 style="margin:0 0 8px">Historial</h2><input id="buscar" placeholder="Buscar día, nombre, compra, venta..." style="width:100%" oninput="render()"><div class="grid" style="margin-top:6px"><button class="wsp" onclick="wspSeleccion()">Enviar seleccionadas</button><button onclick="selTodas()">Tildar todas</button></div><div id="list"></div></div></section></div>
 <script>
-let tipo='V',editId=null,ops=JSON.parse(localStorage.ops||'[]'),ult=null,seleccion={};
-hoy.innerText=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
-function n(x){return Number(String(x||0).replace(',','.'))}function ars(x){return '$'+Math.round(x||0).toLocaleString('es-AR')}function us(x){return 'USD '+Math.round(x||0).toLocaleString('es-AR')}function fecha(){return new Date().toISOString().slice(0,10)}
-function sel(){bc.className=tipo=='C'?'on':'';bv.className=tipo=='V'?'on':''}function tot(){total.innerText=ars(n(usd.value)*n(cot.value))}
-function actualizarNombres(){let set=[...new Set(ops.map(o=>o.nom).filter(Boolean))].sort();nombres.innerHTML=set.map(x=>'<option value="'+String(x).replaceAll('"','&quot;')+'"></option>').join('')}
-function guardar(){let u=n(usd.value),c=n(cot.value),no=nom.value.trim();if(!u||!c||!no){alert('Falta algo');return}if(editId){let o=ops.find(x=>x.id==editId);Object.assign(o,{tipo,usd:u,cot:c,nom:no,total:u*c});editId=null}else{let o={id:Date.now(),fecha:fecha(),tipo,usd:u,cot:c,nom:no,total:u*c,arch:false};ops.unshift(o);ult=o}localStorage.ops=JSON.stringify(ops);usd.value='';cot.value='';nom.value='';tot();render()}
-function editar(id){let o=ops.find(x=>x.id==id);if(!o)return;editId=id;tipo=o.tipo;nom.value=o.nom;usd.value=o.usd;cot.value=o.cot;sel();tot();tab('i');window.scrollTo(0,0)}
-function msg(o){return(o.tipo=='V'?'V. ':'C. ')+o.usd+' x '+o.cot+' '+o.nom}
-function wspUlt(){if(!ult)ult=ops[0];if(!ult)return alert('No hay operación');location.href='https://wa.me/?text='+encodeURIComponent(msg(ult))}
-function wspSeleccion(){let arr=ops.filter(o=>seleccion[o.id]);if(!arr.length)return alert('No hay operaciones tildadas');location.href='https://wa.me/?text='+encodeURIComponent(arr.map(msg).join('\\n'))}
-function selTodas(){ops.forEach(o=>seleccion[o.id]=true);render()}
-function calc(arr=ops){let vv=arr.filter(o=>o.tipo=='V'),cc=arr.filter(o=>o.tipo=='C'),uv=vv.reduce((s,o)=>s+o.usd,0),uc=cc.reduce((s,o)=>s+o.usd,0),pv=vv.reduce((s,o)=>s+o.total,0),pc=cc.reduce((s,o)=>s+o.total,0),p=uv-uc,ci=n(cie.value),pp=p*ci,g=pv-pc-pp;return{uv,uc,pv,pc,p,pp,g}}
-function render(){actualizarNombres();let x=calc();v.innerText=us(x.uv);co.innerText=us(x.uc);pos.innerText=us(x.p);posp.innerText=ars(x.pp);gan.innerText=ars(x.g);let q=(buscar?.value||'').toLowerCase();let arr=ops.filter(o=>(o.fecha+' '+o.nom+' '+o.tipo).toLowerCase().includes(q));let groups={};arr.forEach(o=>{(groups[o.fecha]=groups[o.fecha]||[]).push(o)});list.innerHTML=Object.keys(groups).sort().reverse().map(d=>{let cx=calc(groups[d]);return '<div class=day>'+d+' · V '+us(cx.uv)+' / C '+us(cx.uc)+' / Pos '+us(cx.p)+'</div>'+groups[d].map(o=>'<div class=op><div class=row><input class=check type=checkbox '+(seleccion[o.id]?'checked':'')+' onchange="seleccion['+o.id+']=this.checked"><div style="flex:1"><b>'+(o.tipo=='V'?'🔴 V. ':'🟢 C. ')+o.usd+' x '+o.cot+' '+o.nom+'</b><br><span class=mini>'+ars(o.total)+(o.arch?' · Archivada':'')+'</span></div></div><div class=row style="margin-top:6px"><button class=edit onclick="editar('+o.id+')">Editar</button><button onclick="location.href=\\'https://wa.me/?text='+encodeURIComponent(msg(o))+'\\'">Wsp</button><button class=danger onclick="borrarOp('+o.id+')">Borrar</button></div></div>').join('')}).join('')||'<p class=mini>Sin operaciones.</p>'}
-function borrarOp(id){if(confirm('Borrar operación?')){ops=ops.filter(o=>o.id!=id);localStorage.ops=JSON.stringify(ops);render()}}
-function archivarDia(){let f=fecha();ops.forEach(o=>{if(o.fecha==f)o.arch=true});let x=calc(ops.filter(o=>o.fecha==f));if(x.p>0){ops.unshift({id:Date.now()+1,fecha:fecha(),tipo:'V',usd:x.p,cot:n(cie.value),nom:'Venta inicial',total:x.pp,arch:false,inicial:true})}localStorage.ops=JSON.stringify(ops);render();alert('Día archivado. Si había posición, se agregó Venta inicial.')}
-function tab(i){document.getElementById('i').className=i=='i'?'':'hide';h.className=i=='h'?'':'hide';tabInicio.className=i=='i'?'on':'';tabHist.className=i=='h'?'on':''}
-render()
-</script></body></html>
+var tipo='V';
+var ops=JSON.parse(localStorage.getItem('ops')||'[]');
+var ult=null;
+
+function g(id){return document.getElementById(id)}
+function n(x){return Number(String(x||0).replace(',','.'))}
+function ars(x){return '$'+Math.round(x||0).toLocaleString('es-AR')}
+function us(x){return 'USD '+Math.round(x||0).toLocaleString('es-AR')}
+function fecha(){return new Date().toISOString().slice(0,10)}
+
+g('hoy').innerText=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+
+function sel(){
+  g('bc').className=tipo=='C'?'on':'';
+  g('bv').className=tipo=='V'?'on':'';
+}
+
+function tot(){
+  g('total').innerText=ars(n(g('usd').value)*n(g('cot').value));
+}
+
+function guardar(){
+  var u=n(g('usd').value);
+  var c=n(g('cot').value);
+  var no=g('nom').value.trim();
+
+  if(!u||!c||!no){
+    alert('Falta algo');
+    return;
+  }
+
+  var o={
+    id:Date.now(),
+    fecha:fecha(),
+    tipo:tipo,
+    usd:u,
+    cot:c,
+    nom:no,
+    total:u*c
+  };
+
+  ops.unshift(o);
+  ult=o;
+  localStorage.setItem('ops',JSON.stringify(ops));
+
+  g('usd').value='';
+  g('cot').value='';
+  g('nom').value='';
+  tot();
+  render();
+}
+
+function msg(o){
+  return (o.tipo=='V'?'V. ':'C. ')+o.usd+' x '+o.cot+' '+o.nom;
+}
+
+function wspUlt(){
+  if(!ult) ult=ops[0];
+  if(!ult){
+    alert('No hay operación');
+    return;
+  }
+  location.href='https://wa.me/?text='+encodeURIComponent(msg(ult));
+}
+
+function calc(){
+  var ventas=ops.filter(function(o){return o.tipo=='V'});
+  var compras=ops.filter(function(o){return o.tipo=='C'});
+
+  var usdV=ventas.reduce(function(s,o){return s+o.usd},0);
+  var usdC=compras.reduce(function(s,o){return s+o.usd},0);
+  var arsV=ventas.reduce(function(s,o){return s+o.total},0);
+  var arsC=compras.reduce(function(s,o){return s+o.total},0);
+
+  var pos=usdV-usdC;
+  var cierre=n(g('cie').value);
+  var posPesos=pos*cierre;
+  var gan=arsV-arsC-posPesos;
+
+  return {usdV:usdV,usdC:usdC,pos:pos,posPesos:posPesos,gan:gan};
+}
+
+function render(){
+  var x=calc();
+
+  g('v').innerText=us(x.usdV);
+  g('co').innerText=us(x.usdC);
+  g('pos').innerText=us(x.pos);
+  g('posp').innerText=ars(x.posPesos);
+  g('gan').innerText=ars(x.gan);
+}
+
+function tab(i){
+  g('i').className=i=='i'?'':'hide';
+  g('h').className=i=='h'?'':'hide';
+  g('tabInicio').className=i=='i'?'on':'';
+  g('tabHist').className=i=='h'?'on':'';
+}
+
+render();
+</script>
+</body></html>
