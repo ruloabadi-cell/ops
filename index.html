@@ -1,56 +1,27 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ops</title><style>
-body{font-family:-apple-system;margin:0;background:#f4f5f7;padding:8px;color:#111827}.app{max-width:430px;margin:auto}.card{background:white;border-radius:14px;padding:8px;margin-bottom:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}button,input{font-size:13px;border-radius:10px;padding:7px;border:1px solid #ddd}input{height:36px}button{border:0;font-weight:900;background:#eef0f3}.on{background:#111827!important;color:white!important}.btn{background:#111827;color:white;width:100%}.wsp{background:#25D366!important;color:#063b19!important}.box{background:#eef0f3;border-radius:11px;padding:7px;margin-top:6px}.dark{background:#111827;color:white}.s{font-size:10px;color:#666;font-weight:800}.b{font-size:18px;font-weight:950}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px}.hide{display:none}.op{background:white;border:1px solid #ddd;border-radius:11px;padding:7px;margin:6px 0}.row{display:flex;gap:6px;align-items:center}.row button{flex:1}.mini{font-size:12px;color:#667085}.day{font-weight:900;margin:10px 0 5px}.check{width:auto;height:auto}.danger{background:#fee2e2!important;color:#991b1b!important}.edit{background:#dbeafe!important;color:#1e40af!important}
+body{font-family:-apple-system;margin:0;background:#f4f5f7;padding:7px;color:#111827}.app{max-width:430px;margin:auto}.card{background:white;border-radius:15px;padding:8px;margin-bottom:7px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}button,input{font-size:13px;border-radius:10px;padding:7px;border:1px solid #ddd}input{height:36px}button{border:0;font-weight:900;background:#eef0f3}.on{background:#111827!important;color:white!important}.btn{background:#111827;color:white;width:100%}.wsp{background:#25D366!important;color:#063b19!important}.box{background:#eef0f3;border-radius:11px;padding:7px;margin-top:6px}.dark{background:#111827;color:white}.s{font-size:13px;line-height:1.05;color:#666;font-weight:900;text-transform:uppercase}.dark .s{color:#cbd5e1}.b{font-size:20px;line-height:1.1;font-weight:950}.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px}.hide{display:none}.op{background:white;border:1px solid #ddd;border-radius:11px;padding:7px;margin:6px 0}.row{display:flex;gap:6px;align-items:center}.row button{flex:1}.mini{font-size:12px;color:#667085}.day{font-weight:900;margin:10px 0 5px}.check{width:auto;height:auto}.danger{background:#fee2e2!important;color:#991b1b!important}.edit{background:#dbeafe!important;color:#1e40af!important}
 </style></head><body><div class="app">
 <div class="tabs"><button id="tabInicio" class="on" onclick="tab('i')">Inicio</button><button id="tabHist" onclick="tab('h')">Historial</button></div>
-
-<section id="i">
-<div class="card"><h2 style="margin:0 0 6px;font-size:20px">Nueva operación <small id="hoy"></small></h2>
-
+<section id="i"><div class="card"><h2 style="margin:0 0 6px;font-size:19px">Nueva operación <small id="hoy"></small></h2>
 <div class="grid"><button id="bc" onclick="tipo='C';sel()">Compra</button><button id="bv" class="on" onclick="tipo='V';sel()">Venta</button></div>
-
-<input id="nom" list="nombres" placeholder="Nombre" autocomplete="off" style="width:100%;margin-top:6px">
-<datalist id="nombres"></datalist>
-
-<div class="grid" style="margin-top:6px">
-<input id="usd" placeholder="USD" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" oninput="tot()">
-<input id="cot" placeholder="Cotización" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" oninput="tot()">
-</div>
-
+<input id="nom" list="nombres" placeholder="Nombre" autocomplete="off" style="width:100%;margin-top:6px"><datalist id="nombres"></datalist>
+<div class="grid" style="margin-top:6px"><input id="usd" type="number" inputmode="decimal" placeholder="USD" oninput="tot()"><input id="cot" type="number" inputmode="decimal" placeholder="Cotización" oninput="tot()"></div>
 <div class="box"><div class="s">Total pesos</div><div class="b" id="total">$0</div></div>
-
-<div class="grid" style="margin-top:6px"><button class="btn" onclick="guardar()">Guardar op.</button><button class="wsp" onclick="wspUlt()">Enviar Wsp</button></div>
-</div>
-
-<div class="card">
-<div class="grid"><div class="box"><div class="s">Compras</div><div class="b" id="co">USD 0</div></div><div class="box"><div class="s">Ventas</div><div class="b" id="v">USD 0</div></div></div>
+<div class="grid" style="margin-top:6px"><button class="btn" onclick="guardar()">Guardar op.</button><button class="wsp" onclick="wspUlt()">Enviar Wsp</button></div></div>
+<div class="card"><div class="grid"><div class="box"><div class="s">Compras</div><div class="b" id="co">USD 0</div></div><div class="box"><div class="s">Ventas</div><div class="b" id="v">USD 0</div></div></div>
 <div class="box dark"><div class="s">Posición vendida en USD</div><div class="b" id="pos">USD 0</div></div>
 <div class="box"><div class="s">Posición vendida en pesos</div><div class="b" id="posp">$0</div></div>
-<div class="box"><div class="s">Precio venta cierre</div><input id="cie" value="1425" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" oninput="render()"></div>
+<div class="box"><div class="s">Precio venta cierre</div><input id="cie" type="number" inputmode="decimal" value="1425" oninput="render()"></div>
 <div class="box"><div class="s">Ganancia</div><div class="b" id="gan">$0</div></div>
-<button class="btn" style="margin-top:6px" onclick="archivarDia()">Archivar día</button>
-</div></section>
-
-<section id="h" class="hide"><div class="card">
-<h2 style="margin:0 0 8px">Historial</h2>
-<input id="buscar" placeholder="Buscar día, nombre, compra, venta..." style="width:100%" oninput="render()">
-<div class="grid" style="margin-top:6px"><button class="wsp" onclick="wspSeleccion()">Enviar seleccionadas</button><button onclick="selTodas()">Tildar todas</button></div>
-<div id="list"></div>
-</div></section>
-</div>
-
+<button class="btn" style="margin-top:6px" onclick="archivarDia()">Archivar día</button></div></section>
+<section id="h" class="hide"><div class="card"><h2 style="margin:0 0 8px">Historial</h2><input id="buscar" placeholder="Buscar día, nombre, compra, venta..." style="width:100%" oninput="render()"><div class="grid" style="margin-top:6px"><button class="wsp" onclick="wspSeleccion()">Enviar seleccionadas</button><button onclick="selTodas()">Tildar todas</button></div><div id="list"></div></div></section></div>
 <script>
-let tipo='V',editId=null;
-let ops=JSON.parse(localStorage.ops||'[]');
-let ult=null, seleccion={};
+let tipo='V',editId=null,ops=JSON.parse(localStorage.ops||'[]'),ult=null,seleccion={};
 hoy.innerText=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
-function n(x){return Number(String(x||0).replace(',','.'))}
-function ars(x){return '$'+Math.round(x||0).toLocaleString('es-AR')}
-function us(x){return 'USD '+Math.round(x||0).toLocaleString('es-AR')}
-function fecha(){return new Date().toISOString().slice(0,10)}
-function sel(){bc.className=tipo=='C'?'on':'';bv.className=tipo=='V'?'on':''}
-function tot(){total.innerText=ars(n(usd.value)*n(cot.value))}
+function n(x){return Number(String(x||0).replace(',','.'))}function ars(x){return '$'+Math.round(x||0).toLocaleString('es-AR')}function us(x){return 'USD '+Math.round(x||0).toLocaleString('es-AR')}function fecha(){return new Date().toISOString().slice(0,10)}
+function sel(){bc.className=tipo=='C'?'on':'';bv.className=tipo=='V'?'on':''}function tot(){total.innerText=ars(n(usd.value)*n(cot.value))}
 function actualizarNombres(){let set=[...new Set(ops.map(o=>o.nom).filter(Boolean))].sort();nombres.innerHTML=set.map(x=>'<option value="'+String(x).replaceAll('"','&quot;')+'"></option>').join('')}
-function guardar(){let u=n(usd.value),c=n(cot.value),no=nom.value.trim();if(!u||!c||!no){alert('Falta algo');return}if(editId){let o=ops.find(x=>x.id==editId);Object.assign(o,{tipo:tipo,usd:u,cot:c,nom:no,total:u*c});editId=null}else{let o={id:Date.now(),fecha:fecha(),tipo:tipo,usd:u,cot:c,nom:no,total:u*c,arch:false};ops.unshift(o);ult=o}localStorage.ops=JSON.stringify(ops);usd.value='';cot.value='';nom.value='';tot();render()}
+function guardar(){let u=n(usd.value),c=n(cot.value),no=nom.value.trim();if(!u||!c||!no){alert('Falta algo');return}if(editId){let o=ops.find(x=>x.id==editId);Object.assign(o,{tipo,usd:u,cot:c,nom:no,total:u*c});editId=null}else{let o={id:Date.now(),fecha:fecha(),tipo,usd:u,cot:c,nom:no,total:u*c,arch:false};ops.unshift(o);ult=o}localStorage.ops=JSON.stringify(ops);usd.value='';cot.value='';nom.value='';tot();render()}
 function editar(id){let o=ops.find(x=>x.id==id);if(!o)return;editId=id;tipo=o.tipo;nom.value=o.nom;usd.value=o.usd;cot.value=o.cot;sel();tot();tab('i');window.scrollTo(0,0)}
 function msg(o){return(o.tipo=='V'?'V. ':'C. ')+o.usd+' x '+o.cot+' '+o.nom}
 function wspUlt(){if(!ult)ult=ops[0];if(!ult)return alert('No hay operación');location.href='https://wa.me/?text='+encodeURIComponent(msg(ult))}
