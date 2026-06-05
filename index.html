@@ -273,7 +273,15 @@ function wspUltima(){
 }
 
 function archivarDia(){
-  alert('Día archivado');
+  if(!confirm('Cerrar día y dejar operaciones en cero?')) return;
+
+  ops = [];
+
+  localStorage.setItem('ops', JSON.stringify(ops));
+
+  render();
+
+  alert('Día cerrado');
 }
 
 render();
