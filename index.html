@@ -199,8 +199,7 @@ function guardarYWsp(){
 
   guardar();
 
-  location.href='https://wa.me/?text='+encodeURIComponent(texto);
-
+  window.location.href='whatsapp://send?text='+encodeURIComponent(texto);
 }
 function calc(arr){
   arr=arr||ops;
