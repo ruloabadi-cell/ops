@@ -222,8 +222,31 @@ function renderDetalle(){
 
 function renderHistorial(){
   let q=(g('buscar')?g('buscar').value.toLowerCase():'');
-  let arr=ops.filter(o=>(o.fecha+' '+(o.nombre||o.nom||'')).toLowerCase().includes(q));
-  g('historialLista').innerHTML=arr.length?arr.map(opLinea).join(''):'Sin resultados';
+  let historial=JSON.parse(localStorage.getItem('historial')||'[]');
+
+  let html='';
+
+  historial.forEach(d=>{
+    let texto=(d.fecha+' '+JSON.stringify(d.operaciones||[])).toLowerCase();
+    if(q && !texto.includes(q)) return;
+
+    html += '<div class="op">'+
+      '<b>'+d.fecha+'</b><br>'+
+      'Compras: '+usd(d.compras)+'<br>'+
+      'Ventas: '+usd(d.ventas)+'<br>'+
+      'Posición: '+usd(d.posicion)+'<br>'+
+      'Cierre: '+d.cierre+'<br>'+
+      'Ganancia: '+ars(d.ganancia)+
+    '</div>';
+
+    (d.operaciones||[]).forEach(o=>{
+      html += '<div class="op">'+
+        (o.tipo==='V'?'🔴 V. ':'🟢 C. ')+o.usd+' x '+o.cot+' '+(o.nombre||'')+
+      '</div>';
+    });
+  });
+
+  g('historialLista').innerHTML=html || 'Sin resultados';
 }
 
 function render(){
