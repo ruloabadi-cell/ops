@@ -347,16 +347,7 @@ function archivarDia(){
 
   ops=[];
 
-  if(pos>0){
-    ops.unshift({
-      id:Date.now(),
-      fecha:new Date().toISOString().slice(0,10),
-      tipo:'V',
-      usd:pos,
-      cot:cierre,
-      nombre:'Arrastre día anterior'
-    });
-  }
+  
 
   localStorage.setItem('ops',JSON.stringify(ops));
 
