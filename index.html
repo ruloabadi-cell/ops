@@ -217,7 +217,16 @@ function calc(arr){
 }
 
 function renderHoy(){
-  let x=calc(ops);
+  let historial=JSON.parse(localStorage.getItem('historial')||'[]');
+  let opsHistorial=[];
+
+  historial.forEach(d=>{
+    opsHistorial=opsHistorial.concat(d.operaciones||[]);
+  });
+
+  let todas=opsHistorial.concat(ops);
+  let x=calc(todas);
+
   g('compras').innerText=usd(x.c);
   g('ventas').innerText=usd(x.v);
   g('posicion').innerText=usd(x.pos);
