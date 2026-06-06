@@ -273,17 +273,58 @@ function wspUltima(){
 }
 
 function archivarDia(){
-  if(!confirm('Cerrar día y dejar operaciones en cero?')) return;
+  if(!ops.length){
+    alert('No hay operaciones para cerrar');
+    return;
+  }
 
-  ops = [];
+  let ventas=ops.filter(o=>o.tipo==='V');
+  let compras=ops.filter(o=>o.tipo==='C');
 
-  localStorage.setItem('ops', JSON.stringify(ops));
+  let usdV=ventas.reduce((s,o)=>s+o.usd,0);
+  let usdC=compras.reduce((s,o)=>s+o.usd,0);
+  let arsV=ventas.reduce((s,o)=>s+o.usd*o.cot,0);
+  let arsC=compras.reduce((s,o)=>s+o.usd*o.cot,0);
+
+  let cierre=Number(document.getElementById('cierre').value||0);
+  let pos=usdV-usdC;
+  let posPesos=pos*cierre;
+  let gan=arsV-arsC-posPesos;
+
+  let archivo={
+    fecha:new Date().toISOString().slice(0,10),
+    compras:usdC,
+    ventas:usdV,
+    posicion:pos,
+    cierre:cierre,
+    posicionPesos:posPesos,
+    ganancia:gan,
+    operaciones:[...ops]
+  };
+
+  let historial=JSON.parse(localStorage.getItem('historial')||'[]');
+  historial.unshift(archivo);
+  localStorage.setItem('historial',JSON.stringify(historial));
+
+  ops=[];
+
+  if(pos>0){
+    ops.unshift({
+      id:Date.now(),
+      fecha:new Date().toISOString().slice(0,10),
+      tipo:'V',
+      usd:pos,
+      cot:cierre,
+      nombre:'Arrastre día anterior'
+    });
+  }
+
+  localStorage.setItem('ops',JSON.stringify(ops));
 
   render();
 
-  alert('Día cerrado');
+  alert('Día cerrado y archivado');
 }
-
 render();
 
 </script>
