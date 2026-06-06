@@ -195,14 +195,13 @@ function guardarYWsp(){
     return;
   }
 
+  let texto=(tipo==='V'?'V. ':'C. ')+u+' x '+c+' '+nombre;
+
   guardar();
 
-  setTimeout(function(){
-    wspUltima();
-  },200);
+  location.href='https://wa.me/?text='+encodeURIComponent(texto);
 
 }
-
 function calc(arr){
   arr=arr||ops;
   let ventas=arr.filter(o=>o.tipo==='V');
