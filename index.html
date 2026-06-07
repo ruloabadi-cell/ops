@@ -217,14 +217,22 @@ function calc(arr){
 }
 
 function renderHoy(){
+
   let historial=JSON.parse(localStorage.getItem('historial')||'[]');
-  let opsHistorial=[];
+  let ultimo=historial[0];
 
-  historial.forEach(d=>{
-    opsHistorial=opsHistorial.concat(d.operaciones||[]);
-  });
+  let base=[];
 
-  let todas=opsHistorial.concat(ops);
+  if(ultimo && ultimo.posicion){
+    base.push({
+      tipo: ultimo.posicion>0 ? 'V' : 'C',
+      usd: Math.abs(ultimo.posicion),
+      cot: ultimo.cierre || n(g('cierre').value),
+      nombre: 'Posición inicial'
+    });
+  }
+
+  let todas=base.concat(ops);
   let x=calc(todas);
 
   g('compras').innerText=usd(x.c);
@@ -233,7 +241,6 @@ function renderHoy(){
   g('posPesos').innerText=ars(x.posp);
   g('ganancia').innerText=ars(x.gan);
 }
-
 function opLinea(o){
   return '<div class="op">'+
   (o.tipo==='V'?'🔴 V. ':'🟢 C. ')+o.usd+' x '+o.cot+' '+(o.nombre||o.nom||'')+
