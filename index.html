@@ -332,7 +332,9 @@ function archivarDia(){
     alert('No hay operaciones para cerrar');
     return;
   }
-
+if(!confirm('¿Está seguro que desea cerrar y archivar el día?')){
+  return;
+}
   let ventas=ops.filter(o=>o.tipo==='V');
   let compras=ops.filter(o=>o.tipo==='C');
 
