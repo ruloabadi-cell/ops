@@ -217,23 +217,7 @@ function calc(arr){
 }
 
 function renderHoy(){
-
-  let historial=JSON.parse(localStorage.getItem('historial')||'[]');
-  let ultimo=historial[0];
-
-  let base=[];
-
-  if(ultimo && ultimo.posicion){
-    base.push({
-      tipo: ultimo.posicion>0 ? 'V' : 'C',
-      usd: Math.abs(ultimo.posicion),
-      cot: ultimo.cierre || n(g('cierre').value),
-      nombre: 'Posición inicial'
-    });
-  }
-
-  let todas=base.concat(ops);
-  let x=calc(todas);
+  let x=calc(ops);
 
   g('compras').innerText=usd(x.c);
   g('ventas').innerText=usd(x.v);
