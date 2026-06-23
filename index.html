@@ -217,7 +217,7 @@ function calc(arr){
 }
 
 function renderHoy(){
-  let x=calc(ops);
+  let x=calc(ops.filter(o=>o.fecha===hoy()));
 
   g('compras').innerText=usd(x.c);
   g('ventas').innerText=usd(x.v);
