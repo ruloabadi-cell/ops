@@ -212,7 +212,7 @@ function calc(arr){
   let pos=v-c;
   let cierre=n(g('cierre').value);
   let posp=pos*cierre;
-  let gan=vp-cp-posp;
+  let gan=cierre ? vp-cp-posp : 0;
   return{v,c,pos,posp,gan};
 }
 
@@ -327,8 +327,9 @@ function archivarDia(){
 if(!confirm('¿Está seguro que desea cerrar y archivar el día?')){
   return;
 }
-  let ventas=ops.filter(o=>o.tipo==='V');
-  let compras=ops.filter(o=>o.tipo==='C');
+  let opsHoy=ops.filter(o=>o.fecha===hoy());
+let ventas=opsHoy.filter(o=>o.tipo==='V');
+let compras=opsHoy.filter(o=>o.tipo==='C');
 
   let usdV=ventas.reduce((s,o)=>s+o.usd,0);
   let usdC=compras.reduce((s,o)=>s+o.usd,0);
@@ -336,7 +337,11 @@ if(!confirm('¿Está seguro que desea cerrar y archivar el día?')){
   let arsC=compras.reduce((s,o)=>s+o.usd*o.cot,0);
 
   let cierre=Number(document.getElementById('cierre').value||0);
-  let pos=usdV-usdC;
+  if(!cierre){
+  alert('Ingresá el precio de cierre');
+  return;
+}
+let pos=usdV-usdC;
   let posPesos=pos*cierre;
   let gan=arsV-arsC-posPesos;
 
@@ -348,7 +353,7 @@ if(!confirm('¿Está seguro que desea cerrar y archivar el día?')){
     cierre:cierre,
     posicionPesos:posPesos,
     ganancia:gan,
-    operaciones:[...ops]
+    operaciones:[...opsHoy]
   };
 
   let historial=JSON.parse(localStorage.getItem('historial')||'[]');
