@@ -328,6 +328,10 @@ if(!confirm('¿Está seguro que desea cerrar y archivar el día?')){
   return;
 }
   let opsHoy=ops.filter(o=>o.fecha===hoy());
+if(!opsHoy.length){
+  alert('No hay operaciones de hoy para archivar');
+  return;
+}
 let ventas=opsHoy.filter(o=>o.tipo==='V');
 let compras=opsHoy.filter(o=>o.tipo==='C');
 
